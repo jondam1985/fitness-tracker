@@ -35,30 +35,41 @@ app.get("/exercise", (req, res) => {
 //API calls
 
 app.get("/api/workouts", (req, res) => {
-    db.Workout.find({})
-    .then(resWorkout => {
-        res.json(resWorkout);
-    })
-    .catch(error => {
-        res.json(error);
-    });
+    db.Workout.find({}).sort({ day: -1 }).limit(1)
+        .then(resWorkout => {
+            res.json(resWorkout);
+        })
+        .catch(error => {
+            res.json(error);
+        });
 });
 
-app.put("/api/workouts/:id", (req, res) => {
-    let _id = req.params.id;
-    let type = req.body.type;
-    let name = req.body.name;
-    let distance = req.body.distance;
-    let duration = req.body.duration;
-    db.Workout.insertMany({_id: _id, exercises: [{type: type, name: name, distance: distance, duration: duration}]})
-    .then(resWorkout => {
-        res.json(resWorkout);
-    })
-    .catch(error => {
-        res.json(error);
-    });
+app.put("/api/workouts/", (req, res) => {
+    let id = req.params.id;
+    let body = req.body;
+    db.Workout.update({ day: new Date().setDate(new Date().getDate()) },
+        {
+            $push: {
+                exercises: [{
+                    "type": body.type,
+                    "name": body.name,
+                    "duration": body.duration,
+                    "weight": body.weight,
+                    "reps": body.reps,
+                    "sets": body.sets
+                }]
+            }
+        })
+        .then(resWorkout => {
+            res.json(resWorkout);
+        })
+        .catch(error => {
+            res.json(error);
+        });
 });
+
+db.Workout();
 
 app.listen(PORT, () => {
-console.log(`app listening on port: ${PORT}`);
+    console.log(`app listening on port: ${PORT}`);
 });
