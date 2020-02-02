@@ -1,3 +1,5 @@
+//Required dependencies
+
 const express = require("express");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
@@ -34,6 +36,8 @@ app.get("/exercise", (req, res) => {
 
 //API calls
 
+//Requests to show last exercise
+
 app.get("/api/workouts", (req, res) => {
     db.Workout.find({}).sort({ day: -1 }).limit(1)
         .then(resWorkout => {
@@ -44,22 +48,8 @@ app.get("/api/workouts", (req, res) => {
         });
 });
 
-app.put("/api/workouts/", (req, res) => {
-    let id = req.params.id;
-    let body = req.body;
-    db.Workout.update({ day: new Date().setDate(new Date().getDate()) },
-        {
-            $push: {
-                exercises: [{
-                    "type": body.type,
-                    "name": body.name,
-                    "duration": body.duration,
-                    "weight": body.weight,
-                    "reps": body.reps,
-                    "sets": body.sets
-                }]
-            }
-        })
+app.post("/api/workouts", (req, res) => {
+    db.Workout.find({}).sort({ day: -1 }).limit(1)
         .then(resWorkout => {
             res.json(resWorkout);
         })
@@ -68,7 +58,81 @@ app.put("/api/workouts/", (req, res) => {
         });
 });
 
+//Request to create new exercise entries
+
+app.put("/api/workouts/undefined", (req, res) => {
+    let id = req.params.id;
+    let body = req.body;
+    db.Workout.create({
+        _id: id, day: new Date().setDate(new Date().getDate()),
+
+        exercises: [{
+            "type": body.type,
+            "name": body.name,
+            "distance": body.distance,
+            "duration": body.duration,
+            "weight": body.weight,
+            "reps": body.reps,
+            "sets": body.sets
+        }]
+
+    })
+        .then(resWorkout => {
+            res.json(resWorkout);
+        })
+        .catch(error => {
+            res.json(error);
+        });
+});
+
+//Call to create stats
+
+app.get("/api/workouts/range", (req, res) => {
+    db.Workout.find({})
+        .then(dbWorkout => {
+            res.json(dbWorkout);
+        })
+        .catch(error => {
+            res.json(error);
+        });
+});
+
+//Call to update existing exercises
+
+app.put("/api/workouts/:id", (req, res) => {
+
+    let id = req.params.id;
+    let body = req.body;
+    db.Workout.updateOne({ _id: id }, {
+        $push: {
+            exercises: [
+                {
+                    "type": body.type,
+                    "name": body.name,
+                    "duration": body.duration,
+                    "distance": body.distance,
+                    "weight": body.weight,
+                    "reps": body.reps,
+                    "sets": body.sets
+                }
+            ]
+        }
+    }).then(update => {
+        res.json(update);
+    })
+        .catch(error => {
+            res.json(error);
+        });
+
+});
+
+
+//Connection to DB established
+
 db.Workout();
+
+
+//Launches server
 
 app.listen(PORT, () => {
     console.log(`app listening on port: ${PORT}`);
